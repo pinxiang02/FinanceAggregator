@@ -1,0 +1,86 @@
+﻿@page "/crypto"
+@using FinanceAggregator.Shared
+@using ApexCharts
+@rendermode InteractiveServer
+@inject FinanceApiClient Api
+
+<h3>BTC-USD Live Price</h3>
+
+<div class="row">
+    <div class="col-md-8">
+        @if (trades != null)
+        {
+            <ApexChart TItem="Trade"
+                       Title="Bitcoin Price Movement"
+                       Options="options">
+
+                <ApexPointSeries TItem="Trade"
+                                 Items="trades"
+                                 Name="Price"
+                                 SeriesType="SeriesType.Line"
+                                 XValue="@(e => e.Timestamp.ToLocalTime().ToString("HH:mm:ss"))"
+                                 YValue="@(e => e.Price)" />
+            </ApexChart>
+        }
+    </div>
+
+    <div class="col-md-4">
+        <div style="height: 400px; overflow-y: scroll;">
+            <table class="table table-sm">
+                <thead><tr><th>Time</th><th>Price</th></tr></thead>
+                <tbody>
+                    @foreach (var t in trades?.Take(10) ?? [])
+                    {
+                        <tr>
+                            <td>@t.Timestamp.ToLocalTime().ToString("mm:ss")</td>
+                            <td>@t.Price.ToString("C0")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<Trade> trades = new();
+    private ApexChartOptions<Trade> options = new();
+    private Timer? _timer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // 1. Setup Chart Visuals (Simple & Clean)
+        options.Chart = new Chart { Toolbar = new Toolbar { Show = false } };
+        options.Stroke = new Stroke { Curve = Curve.Smooth, Width = 2 };
+
+        // 2. Load data immediately
+        await LoadData();
+
+        // 3. Start Timer (Runs every 2 seconds)
+        _timer = new Timer(async _ =>
+        {
+            // FORCE the code to run on the UI Thread
+            await InvokeAsync(async () =>
+            {
+                await LoadData();
+                StateHasChanged(); // <-- This commands the HTML to update
+            });
+        }, null, 2000, 2000);
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            var newTrades = await Api.GetTradesAsync();
+            // Important: ApexCharts needs a fresh list reference to detect changes
+            trades = newTrades.OrderBy(t => t.Timestamp).ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching data: {ex.Message}");
+        }
+    }
+
+    public void Dispose() => _timer?.Dispose();
+}

@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="FinanceAggregator.ApiService/FinanceAggregator.ApiService.csproj" />
+  <Project Path="FinanceAggregator.AppHost/FinanceAggregator.AppHost.csproj" />
+  <Project Path="FinanceAggregator.ServiceDefaults/FinanceAggregator.ServiceDefaults.csproj" />
+  <Project Path="FinanceAggregator.Shared/FinanceAggregator.Shared.csproj" Id="52f92368-24f5-4993-b2f3-39e1a725543c" />
+  <Project Path="FinanceAggregator.Web/FinanceAggregator.Web.csproj" />
+</Solution>
