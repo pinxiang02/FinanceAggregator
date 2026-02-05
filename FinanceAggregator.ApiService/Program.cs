@@ -1,5 +1,4 @@
 using FinanceAggregator.ApiService.Data;
-using FinanceAggregator.ApiService.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -45,9 +44,18 @@ using (var scope = app.Services.CreateScope())
     await db.Database.MigrateAsync();
 }
 
-app.MapGet("/trades", async (FinanceDbContext db) =>
+// Update this endpoint to accept a "symbol" parameter
+app.MapGet("/trades", async (FinanceDbContext db, string? symbol) =>
 {
-    return await db.Trades
+    var query = db.Trades.AsQueryable();
+
+    // If the user requested a specific symbol, filter by it
+    if (!string.IsNullOrEmpty(symbol))
+    {
+        query = query.Where(t => t.Symbol == symbol);
+    }
+
+    return await query
                    .OrderByDescending(t => t.Timestamp)
                    .Take(50)
                    .ToListAsync();

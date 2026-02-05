@@ -7,89 +7,104 @@
 
 <PageTitle>Crypto Dashboard</PageTitle>
 
-<div class="container-fluid p-4 dashboard-container">
-    <div class="d-flex justify-content-between align-items-center mb-4 header-glass p-3 rounded-3">
-        <div class="d-flex align-items-center gap-3">
-            <div class="icon-box">
-                <span class="fs-2">₿</span>
+<div class="dashboard-wrapper">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <h2 class="fw-bold mb-0 text-white tracking-tight">Market<span style="color: @GetColor(selectedSymbol)">Terminal</span></h2>
+            <div class="d-flex align-items-center gap-2 mt-1">
+                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 pulsing-dot-container">
+                    <span class="pulsing-dot"></span> Socket Connected
+                </span>
             </div>
-            <div>
-                <h2 class="fw-bold mb-0 text-white tracking-tight">Bitcoin Live</h2>
-                <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-25 pulsing-dot-container">
-                        <span class="pulsing-dot"></span> Live Feed
-                    </span>
-                    <span class="text-secondary small">Binance • USD</span>
+        </div>
+
+        <div class="coin-selector">
+            @foreach (var coin in CoinList)
+            {
+                <button class="coin-chip @(selectedSymbol == coin.Key ? "active" : "")"
+                        @onclick="() => SelectCoin(coin.Key)"
+                        style="--chip-color: @GetColor(coin.Key)">
+                    <span class="symbol">@coin.Value</span>
+                    <span class="ticker">@coin.Key.Replace("-USD", "")</span>
+                </button>
+            }
+        </div>
+    </div>
+
+    @if (trades.Any())
+    {
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="stat-card" style="border-left: 4px solid @GetColor(selectedSymbol)">
+                    <div class="label text-muted text-uppercase small">Current Price</div>
+                    <div class="value display-6 fw-bold text-white">@FormatCurrency(trades.Last().Price)</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="stat-card">
+                    <div class="label text-muted text-uppercase small">Session High</div>
+                    <div class="value fw-bold text-success">@FormatCurrency(trades.Max(t => t.Price))</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="stat-card">
+                    <div class="label text-muted text-uppercase small">Session Low</div>
+                    <div class="value fw-bold text-danger">@FormatCurrency(trades.Min(t => t.Price))</div>
                 </div>
             </div>
         </div>
-        @if (trades.Any())
-        {
-            <div class="text-end">
-                <div class="display-5 fw-bold text-gold price-glow mb-0 font-monospace">
-                    @FormatCurrency(trades.Last().Price)
-                </div>
-                <small class="text-secondary">Current Price (USD)</small>
-            </div>
-        }
-    </div>
+    }
 
     <div class="row g-4 h-100">
         <div class="col-lg-8">
-            <div class="card h-100 shadow-lg border-0 bg-glass">
-                <div class="card-body position-relative">
-                    <div class="d-flex justify-content-between">
-                        <h5 class="card-title text-secondary mb-3">1 Hour Trend</h5>
+            <div class="glass-panel h-100 p-3 position-relative">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="text-white mb-0 fw-light">Price Action <span class="text-muted small ms-2">1H Interval</span></h5>
+                </div>
+
+                @if (!trades.Any())
+                {
+                    <div class="loading-overlay">
+                        <div class="spinner-border text-gold" role="status"></div>
+                        <span class="mt-2 text-secondary small">Connecting to Market...</span>
                     </div>
+                }
 
-                    @if (trades.Any())
-                    {
-                        <div style="min-height: 400px;">
-                            <ApexChart TItem="Trade"
-                                       Title=""
-                                       Options="options">
-
-                                <ApexPointSeries TItem="Trade"
-                                                 Items="trades"
-                                                 Name="Price"
-                                                 SeriesType="SeriesType.Area"
-                                                 XValue="@(e => e.Timestamp.ToLocalTime().ToString("HH:mm:ss"))"
-                                                 YValue="@(e => e.Price)" />
-                            </ApexChart>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="d-flex justify-content-center align-items-center h-50">
-                            <div class="spinner-border text-warning" role="status"></div>
-                        </div>
-                    }
+                <div style="min-height: 400px;">
+                    <ApexChart TItem="Trade" Title="" Options="options" @ref="chart">
+                        <ApexPointSeries TItem="Trade"
+                                         Items="trades"
+                                         Name="Price"
+                                         SeriesType="SeriesType.Area"
+                                         XValue="@(e => e.Timestamp.ToLocalTime().ToString("HH:mm:ss"))"
+                                         YValue="@(e => e.Price)" />
+                    </ApexChart>
                 </div>
             </div>
         </div>
 
         <div class="col-lg-4">
-            <div class="card shadow-lg border-0 bg-glass h-100" style="max-height: 600px;">
-                <div class="card-header bg-transparent border-bottom border-dark py-3">
-                    <h5 class="card-title mb-0 text-gold fw-bold">Recent Trades</h5>
+            <div class="glass-panel h-100 d-flex flex-column" style="max-height: 520px;">
+                <div class="p-3 border-bottom border-secondary border-opacity-25 bg-black bg-opacity-25">
+                    <h5 class="text-white mb-0 fw-light">Order Book <span class="text-muted small">(Real-time)</span></h5>
                 </div>
 
-                <div class="card-body p-0 overflow-auto custom-scrollbar">
+                <div class="flex-grow-1 overflow-auto custom-scrollbar p-0">
                     <table class="table table-dark table-hover table-borderless mb-0 text-center align-middle">
-                        <thead class="sticky-top bg-black">
+                        <thead class="sticky-top" style="background: #000;">
                             <tr>
-                                <th class="py-3 text-secondary text-uppercase small ls-1">Time</th>
-                                <th class="py-3 text-secondary text-uppercase small ls-1">Price (USD)</th>
+                                <th class="text-secondary small text-uppercase py-2">Time</th>
+                                <th class="text-secondary small text-uppercase py-2">Price</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach (var trade in trades.OrderByDescending(t => t.Timestamp).Take(50))
                             {
                                 <tr class="trade-row">
-                                    <td class="text-secondary font-monospace small">
+                                    <td class="text-muted font-monospace small">
                                         @trade.Timestamp.ToLocalTime().ToString("HH:mm:ss")
                                     </td>
-                                    <td class="fw-bold font-monospace text-gold">
+                                    <td class="fw-bold font-monospace" style="color: @GetColor(selectedSymbol)">
                                         @FormatCurrency(trade.Price)
                                     </td>
                                 </tr>
@@ -103,55 +118,83 @@
 </div>
 
 <style>
-    /* 1. Deep Black Background */
+    /* 1. Global Background & Fonts */
     body {
-        background-color: #050505;
-        background-image: radial-gradient(circle at top right, #1a1500 0%, #050505 40%);
+        background-color: #09090b; /* Deep Zinc Black */
+        /* Technical Grid Background */
+        background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+        background-size: 40px 40px;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         color: #e0e0e0;
-        font-family: 'Inter', system-ui, -apple-system, sans-serif;
     }
 
-    /* 2. The Bitcoin Gold Color (#F7931A) */
-    .text-gold {
-        color: #F7931A !important;
+    .dashboard-wrapper {
+        padding: 2rem;
     }
 
-    .bg-glass {
-        background: rgba(20, 20, 20, 0.7);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255,255,255,0.05);
+    /* 2. Glass Panels */
+    .glass-panel {
+        background: rgba(20, 20, 20, 0.6);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
     }
 
-    .header-glass {
-        background: rgba(30, 30, 30, 0.4);
-        border: 1px solid rgba(255,255,255,0.05);
+    /* 3. Coin Chips (The Dropdown Replacement) */
+    .coin-selector {
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        padding-bottom: 4px;
     }
 
-    /* 3. Text Glow Effect */
-    .price-glow {
-        text-shadow: 0 0 20px rgba(247, 147, 26, 0.3);
-    }
-
-    /* 4. Icon Box */
-    .icon-box {
-        width: 48px;
-        height: 48px;
-        background: linear-gradient(135deg, #F7931A, #b86b0e);
-        color: white;
-        border-radius: 12px;
+    .coin-chip {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: #888;
+        padding: 8px 16px;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: all 0.3s ease;
         display: flex;
         align-items: center;
-        justify-content: center;
-        box-shadow: 0 4px 12px rgba(247, 147, 26, 0.3);
+        gap: 8px;
+    }
+
+        .coin-chip:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+
+        /* Active State (Glows with the coin color) */
+        .coin-chip.active {
+            background: var(--chip-color);
+            border-color: var(--chip-color);
+            color: #000; /* Contrast text */
+            font-weight: bold;
+            box-shadow: 0 0 15px var(--chip-color);
+        }
+
+        .coin-chip .symbol {
+            font-size: 1.2rem;
+        }
+
+    /* 4. Stat Cards */
+    .stat-card {
+        background: rgba(30, 30, 30, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 15px 20px;
     }
 
     /* 5. Custom Scrollbar */
     .custom-scrollbar::-webkit-scrollbar {
-        width: 6px;
+        width: 4px;
     }
 
     .custom-scrollbar::-webkit-scrollbar-track {
-        background: #0a0a0a;
+        background: transparent;
     }
 
     .custom-scrollbar::-webkit-scrollbar-thumb {
@@ -159,12 +202,7 @@
         border-radius: 10px;
     }
 
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #F7931A;
-        }
-
-    /* 6. Pulsing Live Dot */
-    /* 6. Pulsing Live Dot */
+    /* 6. Pulsing Dot Animation */
     .pulsing-dot {
         display: inline-block;
         width: 6px;
@@ -176,53 +214,95 @@
         animation: pulse 1.5s infinite;
     }
 
-    /* NOTE THE DOUBLE @@ BELOW */
     @@keyframes pulse {
-        0% { opacity: 1; }
-        50% { opacity: 0.4; }
-        100% { opacity: 1; }
+        0% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.4;
+        }
+
+        100% {
+            opacity: 1;
+        }
     }
 
-    /* ApexCharts Dark Mode Overrides */
+    /* ApexCharts Overrides */
     .apexcharts-tooltip {
-        background: #1a1a1a !important;
+        background: #000 !important;
         border: 1px solid #333 !important;
         color: #fff;
     }
 
     .apexcharts-tooltip-title {
-        background: #000 !important;
+        background: #111 !important;
         border-bottom: 1px solid #333 !important;
     }
 
-    .apexcharts-gridline {
-        stroke: #222 !important;
+    /* Loading Overlay that sits ON TOP of the chart */
+    .loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7); /* Semi-transparent black */
+        backdrop-filter: blur(4px);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 10;
+        border-radius: 16px;
+    }
+
+    .text-gold {
+        color: #F7931A !important;
     }
 </style>
 
 @code {
     private List<Trade> trades = new();
     private ApexChartOptions<Trade> options = new();
+    private ApexChart<Trade>? chart;
     private Timer? _timer;
-
-    // Force US Culture for $ Dollar Sign (Ignores Malaysia/RM)
+    private string selectedSymbol = "BTC-USD";
     private CultureInfo usCulture = CultureInfo.CreateSpecificCulture("en-US");
+
+    // Dictionary for cleaner UI generation
+    private Dictionary<string, string> CoinList = new() {
+        { "BTC-USD", "₿" },
+        { "ETH-USD", "Ξ" },
+        { "SOL-USD", "◎" },
+        { "XRP-USD", "✕" },
+        { "DOGE-USD", "Ð" }
+    };
+
+    private string GetColor(string s) => s switch
+    {
+        "BTC-USD" => "#F7931A", // Bitcoin Orange
+        "ETH-USD" => "#627EEA", // Ethereum Blue
+        "SOL-USD" => "#14F195", // Solana Green
+        "XRP-USD" => "#FFFFFF", // Ripple White
+        "DOGE-USD" => "#C2A633", // Doge Gold
+        _ => "#888"
+    };
 
     protected override async Task OnInitializedAsync()
     {
-        // --- CHART CONFIGURATION ---
+        ConfigureChart();
+        await LoadData();
+        _timer = new Timer(async _ => await InvokeAsync(async () => { await LoadData(); StateHasChanged(); }), null, 2000, 2000);
+    }
+
+    private void ConfigureChart()
+    {
+        var color = GetColor(selectedSymbol);
         options.Theme = new Theme { Mode = Mode.Dark };
-        options.Chart = new Chart
-        {
-            Toolbar = new Toolbar { Show = false },
-            Background = "transparent",
-            Animations = new Animations { Enabled = false } // Realtime performance
-        };
+        options.Chart = new Chart { Toolbar = new Toolbar { Show = false }, Background = "transparent", Animations = new Animations { Enabled = false } };
+        options.Stroke = new Stroke { Curve = Curve.MonotoneCubic, Width = 2, Colors = new List<string> { color } };
 
-        // Gold Line Color
-        options.Stroke = new Stroke { Curve = Curve.Smooth, Width = 3, Colors = new List<string> { "#F7931A" } };
-
-        // Beautiful Gradient Fill
         options.Fill = new Fill
         {
             Type = new List<FillType> { FillType.Gradient },
@@ -231,58 +311,79 @@
                 Shade = GradientShade.Dark,
                 Type = GradientType.Vertical,
                 ShadeIntensity = 0.5,
-                OpacityFrom = 0.6, // Top opacity
-                OpacityTo = 0.0,   // Bottom opacity (fades out)
+                OpacityFrom = 0.5,
+                OpacityTo = 0.05,
                 Stops = new List<double> { 0, 100 }
             }
         };
 
-        // Minimal Axis
-        options.Xaxis = new XAxis
-        {
-            Tooltip = new AxisTooltip { Enabled = false },
-            Labels = new XAxisLabels { Style = new AxisLabelStyle { Colors = "#666" } },
-            AxisBorder = new AxisBorder { Show = false },
-            AxisTicks = new AxisTicks { Show = false }
-        };
+        options.Xaxis = new XAxis { Labels = new XAxisLabels { Style = new AxisLabelStyle { Colors = "#444" } }, AxisBorder = new AxisBorder { Show = false }, AxisTicks = new AxisTicks { Show = false } };
+
         options.Yaxis = new List<YAxis> {
             new YAxis {
-                Opposite = true, // Price on right side (standard for trading)
+                Opposite = true,
                 Labels = new YAxisLabels {
-                    Style = new AxisLabelStyle { Colors = "#F7931A" },
-                    Formatter = @"function (value) { return '$' + value.toLocaleString(); }" // JS Formatter
+                    Style = new AxisLabelStyle { Colors = color },
+                    // The "Safe" Formatter
+                    Formatter = @"function (value) { 
+                        if (value === undefined || value === null) { return ''; }
+                        return '$' + value.toLocaleString(); 
+                    }" 
                 }
             }
         };
-        options.Grid = new Grid { BorderColor = "#222", StrokeDashArray = 4 };
+        // -----------------------
+
+        options.Grid = new Grid { BorderColor = "#222", StrokeDashArray = 3 };
+    }
+
+    private async Task SelectCoin(string symbol)
+    {
+        if (selectedSymbol == symbol) return;
+        selectedSymbol = symbol;
+
+        trades.Clear();
+        ConfigureChart();
+
+        // Force render so @ref and DOM update before calling UpdateOptionsAsync
+        await InvokeAsync(StateHasChanged);
+
+        if (chart != null)
+        {
+            await chart.UpdateOptionsAsync(true, true, false);
+        }
 
         await LoadData();
-
-        _timer = new Timer(async _ =>
-        {
-            await InvokeAsync(async () =>
-            {
-                await LoadData();
-                StateHasChanged();
-            });
-        }, null, 1000, 1000);
     }
 
     private async Task LoadData()
     {
         try
         {
-            var newTrades = await Api.GetTradesAsync();
+            var newTrades = await Api.GetTradesAsync(selectedSymbol);
+
+            // 1. SAFETY CHECK: If API returns null, stop immediately
+            if (newTrades == null)
+            {
+                return;
+            }
+
+            // 2. Now it is safe to sort
             trades = newTrades.OrderBy(t => t.Timestamp).ToList();
+
+            // 3. Update Chart (Check for null chart too)
+            if (chart != null)
+            {
+                await chart.UpdateSeriesAsync(true);
+            }
         }
-        catch (Exception) { }
+        catch (Exception ex)
+        {
+            // Log error to browser console so you can see it
+            Console.WriteLine($"LoadData Error: {ex.Message}");
+        }
     }
 
-    // Helper to print $ dollars
-    private string FormatCurrency(decimal price)
-    {
-        return price.ToString("C2", usCulture);
-    }
-
+    private string FormatCurrency(decimal price) => price.ToString(price < 10 ? "C4" : "C2", usCulture);
     public void Dispose() => _timer?.Dispose();
 }

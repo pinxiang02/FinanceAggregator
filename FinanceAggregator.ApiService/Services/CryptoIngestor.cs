@@ -1,63 +1,67 @@
-﻿using FinanceAggregator.Shared;
-using FinanceAggregator.ApiService.Data;
-using System.Text.Json;
+﻿// In FinanceAggregator.ApiService/CryptoIngestor.cs
 
-namespace FinanceAggregator.ApiService.Services;
+using FinanceAggregator.ApiService;
+using FinanceAggregator.ApiService.Data;
+using FinanceAggregator.Shared;
+using System.Text.Json;
 
 public class CryptoIngestor(IServiceProvider serviceProvider, IHttpClientFactory httpClientFactory, ILogger<CryptoIngestor> logger) : BackgroundService
 {
+    // 1. Define the coins we want to track
+    private readonly string[] _coins = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT"];
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        logger.LogInformation("🚀 Starting Real-Time Crypto Ingestor...");
-
+        logger.LogInformation("🚀 Starting Multi-Coin Ingestor...");
         var httpClient = httpClientFactory.CreateClient("Binance");
 
         while (!stoppingToken.IsCancellationRequested)
         {
-            try
+            using (var scope = serviceProvider.CreateScope())
             {
-                // 1. Fetch real data from Binance (BTCUSDT)
-                // API Docs: https://binance-docs.github.io/apidocs/spot/en/#symbol-price-ticker
-                var response = await httpClient.GetAsync("/api/v3/ticker/price?symbol=BTCUSDT", stoppingToken);
+                var db = scope.ServiceProvider.GetRequiredService<FinanceDbContext>();
 
-                if (response.IsSuccessStatusCode)
+                // 2. Loop through each coin
+                foreach (var symbol in _coins)
                 {
-                    var content = await response.Content.ReadAsStringAsync(stoppingToken);
-                    var ticker = JsonSerializer.Deserialize<BinanceTicker>(content);
-
-                    if (ticker != null && decimal.TryParse(ticker.Price, out var currentPrice))
+                    try
                     {
-                        // 2. Save to Database
-                        using (var scope = serviceProvider.CreateScope())
+                        var response = await httpClient.GetAsync($"/api/v3/ticker/price?symbol={symbol}", stoppingToken);
+                        if (response.IsSuccessStatusCode)
                         {
-                            var db = scope.ServiceProvider.GetRequiredService<FinanceDbContext>();
+                            var content = await response.Content.ReadAsStringAsync(stoppingToken);
+                            var ticker = JsonSerializer.Deserialize<BinanceTicker>(content);
 
-                            var trade = new Trade
+                            if (ticker != null && decimal.TryParse(ticker.Price, out var currentPrice))
                             {
-                                Symbol = "BTC-USD", // Standardize name for your app
-                                Price = currentPrice,
-                                Volume = 0, // Ticker endpoint doesn't give volume, defaulting to 0
-                                Timestamp = DateTime.UtcNow
-                            };
+                                // Convert "ETHUSDT" -> "ETH-USD" for display
+                                var displaySymbol = symbol.Replace("USDT", "-USD");
 
-                            db.Trades.Add(trade);
-                            await db.SaveChangesAsync(stoppingToken);
-
-                            logger.LogInformation("✅ BTC: ${Price}", trade.Price);
+                                db.Trades.Add(new Trade
+                                {
+                                    Symbol = displaySymbol,
+                                    Price = currentPrice,
+                                    Volume = 0,
+                                    Timestamp = DateTime.UtcNow
+                                });
+                            }
                         }
                     }
+                    catch (Exception ex)
+                    {
+                        logger.LogError("Error fetching {Symbol}: {Message}", symbol, ex.Message);
+                    }
+
+                    // Small delay between requests to be nice to Binance API
+                    await Task.Delay(200, stoppingToken);
                 }
-                else
-                {
-                    logger.LogWarning("⚠️ Binance API failed: {StatusCode}", response.StatusCode);
-                }
-            }
-            catch (Exception ex)
-            {
-                logger.LogError("❌ Error fetching crypto data: {Message}", ex.Message);
+
+                // Save all changes at once
+                await db.SaveChangesAsync(stoppingToken);
             }
 
-            await Task.Delay(1000, stoppingToken);
+            // Wait 5 seconds before next batch (prevents rate limiting)
+            await Task.Delay(5000, stoppingToken);
         }
     }
 }
