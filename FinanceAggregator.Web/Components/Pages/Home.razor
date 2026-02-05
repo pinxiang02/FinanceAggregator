@@ -1,7 +1,201 @@
 ﻿@page "/"
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Home | FinanceAggregator</PageTitle>
 
-<h1>Hello, world!</h1>
+<div class="home-container">
+    <div class="hero-section text-center">
+        <div class="badge-pill mb-3">
+            <span class="pulsing-dot"></span> System Operational
+        </div>
 
-Welcome to your new app.
+        <h1 class="display-3 fw-bold text-white mb-3 tracking-tight">
+            High-Performance <br />
+            <span class="text-gradient">Financial Aggregator</span>
+        </h1>
+
+        <p class="lead text-secondary mx-auto mb-5" style="max-width: 700px;">
+            A cloud-native distributed system built with <strong>.NET Aspire</strong>.
+            Demonstrating real-time ingestion, microservices orchestration,
+            and reactive UI patterns.
+        </p>
+
+        <div class="d-flex justify-content-center gap-3">
+            <a href="crypto" class="btn btn-primary btn-lg px-5 fw-bold glow-button">
+                Launch Terminal 🚀
+            </a>
+            <a href="https://github.com/yourusername/FinanceAggregator" target="_blank" class="btn btn-outline-secondary btn-lg px-4">
+                View Source Code
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4 mt-5 pt-5">
+        <div class="col-md-4">
+            <div class="feature-card">
+                <div class="icon-box text-warning">⚡</div>
+                <h5 class="text-white mt-3">Real-Time Ingestion</h5>
+                <p class="text-muted small">
+                    Background workers consuming high-frequency market data from Binance API, decoupled via NATS messaging.
+                </p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card">
+                <div class="icon-box text-info">🐳</div>
+                <h5 class="text-white mt-3">Cloud Native</h5>
+                <p class="text-muted small">
+                    Fully containerized architecture orchestrated by .NET Aspire. Includes PostgreSQL and Redis integration.
+                </p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card">
+                <div class="icon-box text-success">📊</div>
+                <h5 class="text-white mt-3">Reactive Dashboard</h5>
+                <p class="text-muted small">
+                    Interactive Blazor Server UI rendering live candles and order books with sub-millisecond latency.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="tech-stack mt-5 pt-4 border-top border-secondary border-opacity-25 text-center">
+        <p class="text-uppercase text-muted small letter-spacing-2">Powered By</p>
+        <div class="d-flex justify-content-center gap-4 flex-wrap text-secondary fw-bold font-monospace">
+            <span>.NET 9</span>
+            <span>•</span>
+            <span>BLAZOR</span>
+            <span>•</span>
+            <span>POSTGRESQL</span>
+            <span>•</span>
+            <span>DOCKER</span>
+            <span>•</span>
+            <span>ASPIRE</span>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* 1. Global Dark Theme Override */
+    body {
+        background-color: #050505;
+        background-image: radial-gradient(circle at 50% 0%, rgba(247, 147, 26, 0.1) 0%, transparent 50%), linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+        background-size: 100% 100%, 40px 40px, 40px 40px;
+        color: #e0e0e0;
+        font-family: 'Inter', -apple-system, sans-serif;
+    }
+
+    .home-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 4rem 2rem;
+    }
+
+    /* 2. Typography & Gradients */
+    .text-gradient {
+        background: linear-gradient(135deg, #fff 0%, #888 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .tracking-tight {
+        letter-spacing: -1px;
+    }
+
+    .letter-spacing-2 {
+        letter-spacing: 2px;
+    }
+
+    /* 3. Status Badge */
+    .badge-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(25, 135, 84, 0.1);
+        border: 1px solid rgba(25, 135, 84, 0.3);
+        color: #198754;
+        padding: 6px 16px;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    /* 4. Feature Cards */
+    .feature-card {
+        background: rgba(20, 20, 20, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 16px;
+        padding: 2rem;
+        transition: transform 0.3s ease, border-color 0.3s ease;
+        height: 100%;
+    }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(30, 30, 30, 0.6);
+        }
+
+    .icon-box {
+        width: 48px;
+        height: 48px;
+        background: rgba(255,255,255,0.05);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    /* 5. Buttons */
+    .btn-primary {
+        background-color: #F7931A;
+        border: none;
+        color: #000;
+    }
+
+        .btn-primary:hover {
+            background-color: #ffaa40;
+            color: #000;
+        }
+
+    .glow-button {
+        box-shadow: 0 0 20px rgba(247, 147, 26, 0.4);
+    }
+
+    .btn-outline-secondary {
+        border-color: rgba(255,255,255,0.2);
+        color: #aaa;
+    }
+
+        .btn-outline-secondary:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border-color: #fff;
+        }
+
+    /* 6. Animations */
+    .pulsing-dot {
+        width: 8px;
+        height: 8px;
+        background-color: #198754;
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+    }
+
+    @@keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(25, 135, 84, 0.4);
+        }
+
+        70% {
+            box-shadow: 0 0 0 10px rgba(25, 135, 84, 0);
+        }
+
+        100% {
+            box-shadow: 0 0 0 0 rgba(25, 135, 84, 0);
+        }
+    }
+</style>
